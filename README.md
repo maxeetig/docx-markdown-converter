@@ -4,7 +4,7 @@ A fully functional, offline document converter that converts between DOCX and Ma
 
 ## Features
 
-- **DOCX → Markdown**: Convert Word documents to Markdown format
+- **DOCX → Markdown**: Convert Word documents to Markdown format (including tables as GFM)
 - **Markdown → DOCX**: Convert Markdown files to Word documents
 - **100% Offline**: All conversions happen in your browser - no data is sent to any server
 - **Privacy-First**: Your files never leave your device
@@ -20,6 +20,7 @@ A fully functional, offline document converter that converts between DOCX and Ma
 - **Tailwind CSS** - Styling
 - **mammoth.js** - DOCX to HTML conversion
 - **turndown** - HTML to Markdown conversion
+- **turndown-plugin-gfm** - GFM extensions (tables, strikethrough, task lists)
 - **markdown-docx** - Markdown to DOCX conversion
 
 ## Getting Started
@@ -71,8 +72,9 @@ The built files will be in the `build` directory.
 ### DOCX to Markdown
 1. The DOCX file is read as an ArrayBuffer
 2. `mammoth.js` converts the DOCX structure to HTML
-3. `turndown` converts the HTML to clean Markdown
-4. The result is displayed and available for download
+3. HTML is pre-processed (table cells unwrapped, header rows normalized) for correct GFM output
+4. `turndown` with `turndown-plugin-gfm` converts the HTML to Markdown (including tables)
+5. The result is displayed and available for download
 
 ### Markdown to DOCX
 1. The Markdown file is read as text

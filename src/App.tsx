@@ -2,7 +2,35 @@ import { useState } from 'react';
 import { FileUp, Download, RefreshCw, AlertCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
 import markdownDocx, { Packer } from 'markdown-docx';
+
+/**
+ * Pre-process mammoth HTML for correct table conversion:
+ * 1. Unwrap <p> inside table cells - mammoth outputs <td><p>X</p></td>, which turndown converts to
+ *    paragraphs with extra newlines, breaking table layout and round-trip conversion.
+ * 2. Convert first row <td> to <th> - turndown-plugin-gfm requires th to convert tables to markdown.
+ */
+function preprocessTableHtml(html: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  doc.querySelectorAll('table td, table th').forEach((cell) => {
+    cell.querySelectorAll('p').forEach((p) => {
+      p.replaceWith(...Array.from(p.childNodes));
+    });
+  });
+  doc.querySelectorAll('table').forEach((table) => {
+    const firstRow = table.querySelector('tbody tr, thead tr, tr');
+    if (firstRow && firstRow.querySelectorAll('td').length > 0 && !firstRow.querySelector('th')) {
+      firstRow.querySelectorAll('td').forEach((td) => {
+        const th = doc.createElement('th');
+        th.innerHTML = td.innerHTML;
+        td.replaceWith(th);
+      });
+    }
+  });
+  return doc.body.innerHTML;
+}
 
 type Tab = 'docx-to-md' | 'md-to-docx';
 
@@ -42,13 +70,15 @@ export default function App() {
         
         // Convert DOCX to HTML using mammoth
         const result = await mammoth.convertToHtml({ arrayBuffer });
-        
+        const htmlWithTableHeaders = preprocessTableHtml(result.value);
+
         // Convert HTML to Markdown using turndown
         const turndownService = new TurndownService({
           headingStyle: 'atx',
           codeBlockStyle: 'fenced',
         });
-        const markdown = turndownService.turndown(result.value);
+        turndownService.use(gfm);
+        const markdown = turndownService.turndown(htmlWithTableHeaders);
         
         // Store conversion messages/warnings
         if (result.messages.length > 0) {
