@@ -67,6 +67,44 @@ The built files will be in the `build` directory.
 4. **Preview** (DOCX → Markdown): Review the converted Markdown in the preview area
 5. **Download**: Click the "Download" button to save the converted file
 
+## Python CLI (DOCX -> Markdown + Metadata)
+
+For batch/scripted conversion, a Python CLI is included: `docx_to_markdown_cli.py`.
+
+### Why this library stack
+
+- `mammoth` is used for DOCX parsing because it is mature, pure-Python, and does not require external binaries.
+- Output is converted via `markdownify` after table HTML normalization to preserve GFM-style table structure.
+- Compared to Pandoc wrappers, this avoids installing a system-level `pandoc` binary.
+
+### Install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Convert a file
+
+```bash
+python3 docx_to_markdown_cli.py input.docx
+```
+
+This writes:
+- `input.md`
+- `input.md.metadata.json` (next to the markdown file)
+
+You can set output path explicitly:
+
+```bash
+python3 docx_to_markdown_cli.py input.docx --output out/target.md
+```
+
+This writes:
+- `out/target.md`
+- `out/target.md.metadata.json`
+
 ## How It Works
 
 ### DOCX to Markdown
